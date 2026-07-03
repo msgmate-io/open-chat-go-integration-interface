@@ -24,6 +24,7 @@ type FrontendPage struct {
 
 type Definition struct {
 	Name           string
+	ReadmeMarkdown string
 	APIRoutes      []string
 	FrontendRoutes []FrontendRoute
 	FrontendPages  []FrontendPage

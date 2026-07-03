@@ -22,10 +22,27 @@ type FrontendPage struct {
 	AssetPath   string
 }
 
+type APIRouteParameter struct {
+	Name        string
+	In          string
+	Type        string
+	Required    bool
+	Description string
+}
+
+type APIRouteDoc struct {
+	Route        string
+	Summary      string
+	Description  string
+	RequiredAuth []string
+	Parameters   []APIRouteParameter
+}
+
 type Definition struct {
 	Name           string
 	ReadmeMarkdown string
 	APIRoutes      []string
+	APIRouteDocs   []APIRouteDoc
 	FrontendRoutes []FrontendRoute
 	FrontendPages  []FrontendPage
 	FrontendAssets fs.FS

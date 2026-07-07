@@ -38,6 +38,12 @@ type APIRouteDoc struct {
 	Parameters   []APIRouteParameter
 }
 
+type RuntimeEnvVar struct {
+	Key         string
+	Sensitive   bool
+	Description string
+}
+
 type Definition struct {
 	Name           string
 	ReadmeMarkdown string
@@ -49,4 +55,5 @@ type Definition struct {
 	ModelProviders []func() []interface{}
 	RouteRegistrar func(v1Private *http.ServeMux, root *http.ServeMux)
 	Functions      map[string]Function
+	RuntimeEnvVars []RuntimeEnvVar
 }

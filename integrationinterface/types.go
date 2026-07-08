@@ -4,6 +4,8 @@ import (
 	"context"
 	"io/fs"
 	"net/http"
+
+	"gorm.io/gorm"
 )
 
 type Function func(ctx context.Context, payload map[string]interface{}) (interface{}, error)
@@ -44,8 +46,15 @@ type RuntimeEnvVar struct {
 	Description string
 }
 
+type Migration struct {
+	Name string
+	Run  func(db *gorm.DB) error
+}
+
 type Definition struct {
 	Name           string
+	AdminOnly      bool
+	UserAccessible bool
 	ReadmeMarkdown string
 	APIRoutes      []string
 	APIRouteDocs   []APIRouteDoc
@@ -56,4 +65,5 @@ type Definition struct {
 	RouteRegistrar func(v1Private *http.ServeMux, root *http.ServeMux)
 	Functions      map[string]Function
 	RuntimeEnvVars []RuntimeEnvVar
+	Migrations     []Migration
 }

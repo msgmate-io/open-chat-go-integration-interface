@@ -52,18 +52,19 @@ type Migration struct {
 }
 
 type Definition struct {
-	Name           string
-	AdminOnly      bool
-	UserAccessible bool
-	ReadmeMarkdown string
-	APIRoutes      []string
-	APIRouteDocs   []APIRouteDoc
-	FrontendRoutes []FrontendRoute
-	FrontendPages  []FrontendPage
-	FrontendAssets fs.FS
-	ModelProviders []func() []interface{}
-	RouteRegistrar func(v1Private *http.ServeMux, root *http.ServeMux)
-	Functions      map[string]Function
-	RuntimeEnvVars []RuntimeEnvVar
-	Migrations     []Migration
+	Name                 string
+	AdminOnly            bool
+	UserAccessible       bool
+	ReadmeMarkdown       string
+	APIRoutes            []string
+	APIRouteDocs         []APIRouteDoc
+	FrontendRoutes       []FrontendRoute
+	FrontendPages        []FrontendPage
+	FrontendAssets       fs.FS
+	ModelProviders       []func() []interface{}
+	RouteRegistrar       func(v1Private *http.ServeMux, root *http.ServeMux)
+	Functions            map[string]Function
+	SharedConfigDefaults func(current map[string]interface{}) map[string]interface{}
+	RuntimeEnvVars       []RuntimeEnvVar
+	Migrations           []Migration
 }

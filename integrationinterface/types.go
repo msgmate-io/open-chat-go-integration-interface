@@ -46,6 +46,12 @@ type RuntimeEnvVar struct {
 	Description string
 }
 
+type RuntimeConfigAlias struct {
+	JSONKey     string
+	EnvKey      string
+	Description string
+}
+
 type Migration struct {
 	Name string
 	Run  func(db *gorm.DB) error
@@ -66,5 +72,6 @@ type Definition struct {
 	Functions            map[string]Function
 	SharedConfigDefaults func(current map[string]interface{}) map[string]interface{}
 	RuntimeEnvVars       []RuntimeEnvVar
+	RuntimeConfigAliases []RuntimeConfigAlias
 	Migrations           []Migration
 }

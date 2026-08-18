@@ -5,6 +5,7 @@ import (
 	"io/fs"
 	"net/http"
 
+	"github.com/msgmate-io/go-tool-interface/toolinterface"
 	"gorm.io/gorm"
 )
 
@@ -71,6 +72,7 @@ type Definition struct {
 	RouteRegistrar       func(v1Private *http.ServeMux, root *http.ServeMux)
 	Functions            map[string]Function
 	SharedConfigDefaults func(current map[string]interface{}) map[string]interface{}
+	ToolDefinitions      []toolinterface.Definition
 	RuntimeEnvVars       []RuntimeEnvVar
 	RuntimeConfigAliases []RuntimeConfigAlias
 	Migrations           []Migration

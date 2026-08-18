@@ -5,6 +5,8 @@ import (
 	"sort"
 	"strings"
 	"sync"
+
+	"github.com/msgmate-io/go-tool-interface/toolinterface"
 )
 
 var (
@@ -18,13 +20,41 @@ func Register(def Definition) error {
 		return fmt.Errorf("integration definition requires a non-empty name")
 	}
 
+	tools := make([]toolinterface.Definition, 0, len(def.ToolDefinitions))
+	seenToolNames := map[string]struct{}{}
+	for idx, toolDef := range def.ToolDefinitions {
+		toolName := strings.TrimSpace(toolDef.Name)
+		if toolName == "" {
+			return fmt.Errorf("integration definition %q tool_definitions[%d] requires a non-empty name", name, idx)
+		}
+		if toolDef.Run == nil {
+			return fmt.Errorf("integration definition %q tool %q requires a run function", name, toolName)
+		}
+		if _, exists := seenToolNames[toolName]; exists {
+			return fmt.Errorf("integration definition %q has duplicate tool name %q", name, toolName)
+		}
+		if toolinterface.Has(toolName) {
+			return fmt.Errorf("integration definition %q tool %q already registered", name, toolName)
+		}
+		toolDef.Name = toolName
+		seenToolNames[toolName] = struct{}{}
+		tools = append(tools, toolDef)
+	}
+
 	mu.Lock()
 	defer mu.Unlock()
 	if _, exists := definitions[name]; exists {
 		return fmt.Errorf("integration definition '%s' already registered", name)
 	}
 
+	for _, toolDef := range tools {
+		if err := toolinterface.Register(toolDef); err != nil {
+			return fmt.Errorf("integration definition %q failed to register tool %q: %w", name, toolDef.Name, err)
+		}
+	}
+
 	def.Name = name
+	def.ToolDefinitions = tools
 	definitions[name] = def
 	return nil
 }

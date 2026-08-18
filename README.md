@@ -8,6 +8,7 @@ Integrations can contribute:
 - API route registration
 - frontend HTML routes under `/integrations/<integration_name>/...`
 - static frontend HTML pages backed by integration-owned embedded assets
+- tool definitions (using go-tool-interface)
 - callable integration functions
 
 ## Usage
@@ -20,6 +21,7 @@ import (
 	"net/http"
 
 	"github.com/msgmate-io/go-integration-interface/integrationinterface"
+	"github.com/msgmate-io/go-tool-interface/toolinterface"
 )
 
 func init() {
@@ -60,6 +62,26 @@ func init() {
 				return map[string]interface{}{"ok": true}, nil
 			},
 		},
+		ToolDefinitions: []toolinterface.Definition{
+			{
+				Name:        "my_integration_echo",
+				Description: "Echo a message",
+				InputType: struct {
+					Message string `json:"message"`
+				}{},
+				RequiredParams: []string{"message"},
+				Parameters: map[string]interface{}{
+					"message": map[string]interface{}{"type": "string"},
+				},
+				Run: func(input interface{}, init map[string]interface{}) (string, error) {
+					_ = init
+					in := input.(struct {
+						Message string `json:"message"`
+					})
+					return in.Message, nil
+				},
+			},
+		},
 	})
 }
 ```
@@ -70,3 +92,4 @@ Notes:
 - Frontend route paths must be under `/integrations/<integration_name>`.
 - Frontend routes must not use `/api` prefixes.
 - Frontend pages require `Definition.FrontendAssets` and `AssetPath` points to an HTML file in that filesystem.
+- Tool names are global across all integrations; duplicate tool names fail registration.

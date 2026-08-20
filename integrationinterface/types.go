@@ -58,6 +58,24 @@ type Migration struct {
 	Run  func(db *gorm.DB) error
 }
 
+type BotIdentityConfig struct {
+	Username    string `json:"username"`
+	Email       string `json:"email,omitempty"`
+	Password    string `json:"password"`
+	Name        string `json:"name"`
+	Description string `json:"description,omitempty"`
+	IsPublic    *bool  `json:"is_public,omitempty"`
+	IsActive    *bool  `json:"is_active,omitempty"`
+}
+
+type BotBootstrapConfig struct {
+	PrimaryOwner        string                 `json:"primary_owner"`
+	AdditionalOwners    []string               `json:"additional_owners,omitempty"`
+	Bot                 BotIdentityConfig      `json:"bot"`
+	DefaultSharedConfig map[string]interface{} `json:"default_shared_config"`
+	OverwriteIfExists   bool                   `json:"overwrite_if_exists,omitempty"`
+}
+
 type Definition struct {
 	Name                 string
 	AdminOnly            bool
@@ -76,4 +94,5 @@ type Definition struct {
 	RuntimeEnvVars       []RuntimeEnvVar
 	RuntimeConfigAliases []RuntimeConfigAlias
 	Migrations           []Migration
+	BotBootstrapConfigs  []BotBootstrapConfig
 }

@@ -10,6 +10,7 @@ Integrations can contribute:
 - static frontend HTML pages backed by integration-owned embedded assets
 - tool definitions (using go-tool-interface)
 - callable integration functions
+- default bot bootstrap configs (applied at server startup)
 
 ## Usage
 
@@ -82,6 +83,19 @@ func init() {
 				},
 			},
 		},
+		BotBootstrapConfigs: []integrationinterface.BotBootstrapConfig{
+			{
+				PrimaryOwner: "admin",
+				Bot: integrationinterface.BotIdentityConfig{
+					Username: "my-integration-bot",
+					Password: "random",
+					Name:     "my_integration_bot",
+				},
+				DefaultSharedConfig: map[string]interface{}{
+					"tools": []string{"my_integration_echo"},
+				},
+			},
+		},
 	})
 }
 ```
@@ -93,3 +107,5 @@ Notes:
 - Frontend routes must not use `/api` prefixes.
 - Frontend pages require `Definition.FrontendAssets` and `AssetPath` points to an HTML file in that filesystem.
 - Tool names are global across all integrations; duplicate tool names fail registration.
+- Integration bot bootstrap configs reuse the same schema as `open-chat.json bootstrap.bots`.
+- Integration bot configs are intended as defaults; user-provided bot bootstrap config should take precedence.

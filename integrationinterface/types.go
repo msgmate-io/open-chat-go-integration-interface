@@ -69,12 +69,13 @@ type BotIdentityConfig struct {
 }
 
 type BotBootstrapConfig struct {
-	PrimaryOwner         string                 `json:"primary_owner"`
-	AdditionalOwners     []string               `json:"additional_owners,omitempty"`
-	Bot                  BotIdentityConfig      `json:"bot"`
-	DefaultSharedConfig  map[string]interface{} `json:"default_shared_config"`
-	AllowedModelBackends []string               `json:"allowed_model_backends,omitempty"`
-	OverwriteIfExists    bool                   `json:"overwrite_if_exists,omitempty"`
+	PrimaryOwner            string                 `json:"primary_owner"`
+	AdditionalOwners        []string               `json:"additional_owners,omitempty"`
+	Bot                     BotIdentityConfig      `json:"bot"`
+	DefaultSharedConfig     map[string]interface{} `json:"default_shared_config"`
+	AllowedModelBackends    []string               `json:"allowed_model_backends,omitempty"`
+	InheritDefaultBotModels bool                   `json:"inherit_default_bot_models,omitempty"`
+	OverwriteIfExists       bool                   `json:"overwrite_if_exists,omitempty"`
 }
 
 type Definition struct {

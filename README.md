@@ -107,5 +107,5 @@ Notes:
 - Frontend routes must not use `/api` prefixes.
 - Frontend pages require `Definition.FrontendAssets` and `AssetPath` points to an HTML file in that filesystem.
 - Tool names are global across all integrations; duplicate tool names fail registration.
-- Integration bot bootstrap configs reuse the same schema as `open-chat.json bootstrap.bots`.
+- Integration bot bootstrap configs reuse the same schema as `open-chat.json`/`open-chat.yaml bootstrap.bots`.
 - Integration bot configs are intended as defaults; user-provided bot bootstrap config should take precedence.

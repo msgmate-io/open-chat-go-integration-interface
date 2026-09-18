@@ -100,6 +100,49 @@ func init() {
 }
 ```
 
+## Runtime env vars and settings UI
+
+Integrations can declare `RuntimeEnvVars` to expose configuration through the
+admin **Integration Settings** page. Keys must use the `OCI_` prefix.
+
+```go
+RuntimeEnvVars: []integrationinterface.RuntimeEnvVar{
+    {
+        Key:         "OCI_MY_INTEGRATION_API_KEY",
+        Sensitive:   true,
+        Description: "API key used to talk to the upstream service.",
+        Label:       "API key",
+        Type:        "secret",
+        Required:    true,
+        Group:       "Connection",
+        Order:       10,
+    },
+    {
+        Key:         "OCI_MY_INTEGRATION_ENABLED",
+        Type:        "bool",
+        Default:     "false",
+        Group:       "Connection",
+    },
+},
+RuntimeConfigAliases: []integrationinterface.RuntimeConfigAlias{
+    {JSONKey: "api_key", EnvKey: "OCI_MY_INTEGRATION_API_KEY"},
+},
+```
+
+Every metadata field other than `Key`/`Sensitive`/`Description` is optional and
+backwards compatible. When metadata is omitted the settings UI infers it:
+
+- `Sensitive` fields render as `secret`.
+- Keys containing `ENABLE`/`ENABLED` (or whose current value parses as a bool)
+  render as `bool`.
+- Keys ending in `_JSON`, `_SPEC`, `_YAML`, `_PRIVATE_KEY`, `BOOTSTRAP` or
+  `KUBECONFIG` (or multi-line values) render as `json`.
+- Everything else renders as `string`.
+
+Aliases map a JSON config key under `integrations.<name>.<json_key>` to a
+declared env key, so settings writes land in the alias entry when present and
+otherwise under `env.<ENVKEY>`.
+
 Notes:
 
 - Frontend routes are auto-registered by the backend for all compiled integrations.

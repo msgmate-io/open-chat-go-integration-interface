@@ -78,6 +78,30 @@ type BotBootstrapConfig struct {
 	OverwriteIfExists       bool                   `json:"overwrite_if_exists,omitempty"`
 }
 
+// BootstrapSources carries server startup inputs to an integration's optional
+// Bootstrap hook. It exposes raw, integration-scoped data so each integration
+// owns its own decoding instead of the core server hardcoding per-integration
+// bootstrap wiring.
+type BootstrapSources struct {
+	// DB is the initialized database handle.
+	DB *gorm.DB
+	// AdminUsername is the bootstrap admin user the integration should grant
+	// ownership to by default.
+	AdminUsername string
+	// Config is the `bootstrap.<name>` section of the resolved open-chat
+	// config for this integration, if present.
+	Config map[string]interface{}
+	// Integrations is the full `integrations.<name>` config section, useful for
+	// runtime env aliases declared by the integration.
+	Integrations map[string]map[string]interface{}
+	// Env looks up an environment variable (OCI_* runtime config overrides).
+	Env func(key string) (string, bool)
+}
+
+// BootstrapFunc is invoked once at server startup after the database and admin
+// user are ready. Returning an error aborts startup.
+type BootstrapFunc func(ctx context.Context, sources BootstrapSources) error
+
 type Definition struct {
 	Name                 string
 	AdminOnly            bool
@@ -97,4 +121,5 @@ type Definition struct {
 	RuntimeConfigAliases []RuntimeConfigAlias
 	Migrations           []Migration
 	BotBootstrapConfigs  []BotBootstrapConfig
+	Bootstrap            BootstrapFunc
 }

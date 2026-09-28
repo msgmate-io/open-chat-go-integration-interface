@@ -16,6 +16,10 @@ type FrontendRoute struct {
 	Public      bool
 	Description string
 	Handler     http.HandlerFunc
+	// Root mounts a first-party route outside the default
+	// /integrations/<name> prefix (e.g. /sign-up). Only trusted,
+	// first-party integrations should use it.
+	Root bool
 }
 
 type FrontendPage struct {
@@ -23,6 +27,10 @@ type FrontendPage struct {
 	Public      bool
 	Description string
 	AssetPath   string
+	// Root mounts a first-party page outside the default
+	// /integrations/<name> prefix (e.g. /sign-up). Only trusted,
+	// first-party integrations should use it.
+	Root bool
 }
 
 type APIRouteParameter struct {

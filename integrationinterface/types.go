@@ -53,6 +53,36 @@ type RuntimeEnvVar struct {
 	Key         string
 	Sensitive   bool
 	Description string
+	// Label is the human readable field label. Falls back to a humanized Key
+	// when empty.
+	Label string
+	// Type hints the settings UI renderer. One of
+	// "string"|"bool"|"number"|"select"|"json"|"secret". When empty the type is
+	// inferred from Sensitive/Key/value.
+	Type string
+	// Group is the form section the field belongs to.
+	Group string
+	// Order sorts fields within their group.
+	Order int
+	// Default is the default value suggested for the field.
+	Default string
+	// Placeholder is shown inside empty inputs.
+	Placeholder string
+	// Options restricts the allowed values when Type is "select".
+	Options []string
+	// Required marks the field as mandatory in the settings UI.
+	Required bool
+	// Advanced collapses the field under an "Advanced" section.
+	Advanced bool
+	// Min is the inclusive lower bound for numeric fields.
+	Min *float64
+	// Max is the inclusive upper bound for numeric fields.
+	Max *float64
+	// Step is the input step granularity for numeric fields.
+	Step *float64
+	// UserVisible marks a field whose resolved value is safe and relevant to
+	// show to non-admin users (for example in integration frontend pages).
+	UserVisible bool
 }
 
 type RuntimeConfigAlias struct {

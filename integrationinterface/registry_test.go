@@ -1,6 +1,7 @@
 package integrationinterface
 
 import (
+	"context"
 	"fmt"
 	"strings"
 	"testing"
@@ -87,5 +88,40 @@ func TestRegisterRejectsDuplicateToolAcrossIntegrations(t *testing.T) {
 	}
 	if !strings.Contains(err.Error(), "already registered") {
 		t.Fatalf("expected duplicate tool error, got: %v", err)
+	}
+}
+
+func TestAuthEventSinksExposeRegisteredSink(t *testing.T) {
+	integrationName := uniqueName("authevent")
+	called := false
+	if err := Register(Definition{
+		Name: integrationName,
+		AuthEventSink: func(_ context.Context, event AuthEvent) error {
+			called = true
+			if event.Identifier != "user@example.com" {
+				t.Fatalf("unexpected identifier %q", event.Identifier)
+			}
+			return nil
+		},
+	}); err != nil {
+		t.Fatalf("register failed: %v", err)
+	}
+
+	sinks := AuthEventSinks()
+	var found *AuthEventSinkRef
+	for i := range sinks {
+		if sinks[i].IntegrationName == integrationName {
+			found = &sinks[i]
+			break
+		}
+	}
+	if found == nil {
+		t.Fatalf("expected auth event sink for %q", integrationName)
+	}
+	if err := found.Sink(context.Background(), AuthEvent{Identifier: "user@example.com"}); err != nil {
+		t.Fatalf("sink returned error: %v", err)
+	}
+	if !called {
+		t.Fatalf("expected sink to be called")
 	}
 }

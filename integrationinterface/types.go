@@ -160,4 +160,9 @@ type Definition struct {
 	Migrations           []Migration
 	BotBootstrapConfigs  []BotBootstrapConfig
 	Bootstrap            BootstrapFunc
+	// AuthEventSink, when set, receives authentication events emitted by the
+	// core server (login attempts, success and failure). It lets integrations
+	// own richer login-history and audit trails without the core hardcoding
+	// per-integration persistence.
+	AuthEventSink AuthEventFunc
 }

@@ -82,6 +82,36 @@ func List() []Definition {
 	return result
 }
 
+// AuthEventSinkRef pairs an integration name with its registered auth event
+// sink.
+type AuthEventSinkRef struct {
+	IntegrationName string
+	Sink            AuthEventFunc
+}
+
+// AuthEventSinks returns the auth event sinks declared by registered
+// integrations, ordered by integration name.
+func AuthEventSinks() []AuthEventSinkRef {
+	mu.RLock()
+	defer mu.RUnlock()
+
+	names := make([]string, 0, len(definitions))
+	for name := range definitions {
+		names = append(names, name)
+	}
+	sort.Strings(names)
+
+	out := make([]AuthEventSinkRef, 0, len(names))
+	for _, name := range names {
+		def := definitions[name]
+		if def.AuthEventSink == nil {
+			continue
+		}
+		out = append(out, AuthEventSinkRef{IntegrationName: name, Sink: def.AuthEventSink})
+	}
+	return out
+}
+
 func Get(name string) (Definition, bool) {
 	mu.RLock()
 	defer mu.RUnlock()

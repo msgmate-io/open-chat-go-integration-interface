@@ -33,6 +33,27 @@ type FrontendPage struct {
 	Root bool
 }
 
+// FrontendDoc declares an integration-owned documentation page. The frontend
+// implementation lives in the integration checkout exactly like a
+// FrontendPage (a prerendered Vike route served under /integrations/<name>/…);
+// the extra metadata lets the core frontend render documentation navigation,
+// group pages into sections and surface them from the /integrations overview.
+type FrontendDoc struct {
+	Route       string
+	Title       string
+	Description string
+	AssetPath   string
+	Public      bool
+	// Root mounts a first-party documentation route outside the default
+	// /integrations/<name> prefix. Only trusted, first-party integrations
+	// should use it.
+	Root bool
+	// Section groups documentation pages in the docs navigation.
+	Section string
+	// Order sorts documentation pages within their section.
+	Order int
+}
+
 type APIRouteParameter struct {
 	Name        string
 	In          string
@@ -141,15 +162,21 @@ type BootstrapSources struct {
 type BootstrapFunc func(ctx context.Context, sources BootstrapSources) error
 
 type Definition struct {
-	Name                 string
-	AdminOnly            bool
-	UserAccessible       bool
-	ReadmeMarkdown       string
-	APIRoutes            []string
-	APIRouteDocs         []APIRouteDoc
-	FrontendRoutes       []FrontendRoute
-	FrontendPages        []FrontendPage
-	FrontendAssets       fs.FS
+	Name           string
+	AdminOnly      bool
+	UserAccessible bool
+	ReadmeMarkdown string
+	APIRoutes      []string
+	APIRouteDocs   []APIRouteDoc
+	FrontendRoutes []FrontendRoute
+	FrontendPages  []FrontendPage
+	FrontendDocs   []FrontendDoc
+	FrontendAssets fs.FS
+	// Labels are free-form labels used to filter integrations in the
+	// /integrations overview (e.g. "core", "full"). The build tooling also
+	// derives "core"/"full" from the selected integration profile and merges
+	// them with these.
+	Labels               []string
 	ModelProviders       []func() []interface{}
 	RouteRegistrar       func(v1Private *http.ServeMux, root *http.ServeMux)
 	Functions            map[string]Function

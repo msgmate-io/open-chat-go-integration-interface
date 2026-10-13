@@ -6,10 +6,23 @@ import (
 	"net/http"
 
 	"github.com/msgmate-io/go-tool-interface/toolinterface"
+	"github.com/urfave/cli/v3"
 	"gorm.io/gorm"
 )
 
 type Function func(ctx context.Context, payload map[string]interface{}) (interface{}, error)
+
+// CLICommand declares an extra top-level `open-chat <Name>` subcommand that an
+// integration contributes to the Open-Chat CLI. Integrations keep their own
+// command implementations inside their repository; the core only wires the
+// returned commands into the root command when the integration is compiled in.
+type CLICommand struct {
+	// Name is the command name shown in `open-chat --help`.
+	Name string
+	// Command builds the urfave/cli command. It is invoked lazily so an
+	// integration only pays for constructing commands it exposes.
+	Command func() *cli.Command
+}
 
 type FrontendRoute struct {
 	Route       string
@@ -192,4 +205,8 @@ type Definition struct {
 	// own richer login-history and audit trails without the core hardcoding
 	// per-integration persistence.
 	AuthEventSink AuthEventFunc
+	// CLICommands declares extra `open-chat` subcommands contributed by this
+	// integration. Compiled-out integrations contribute nothing, so CLI
+	// extensions always mirror the integration profile of the build.
+	CLICommands []CLICommand
 }

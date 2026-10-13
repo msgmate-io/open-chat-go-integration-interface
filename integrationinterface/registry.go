@@ -112,6 +112,39 @@ func AuthEventSinks() []AuthEventSinkRef {
 	return out
 }
 
+// CLICommandRef pairs an integration name with a CLI command it contributes.
+type CLICommandRef struct {
+	IntegrationName string
+	Command         CLICommand
+}
+
+// CLICommands returns the CLI commands contributed by registered
+// integrations, ordered by integration name and declaration order. The core
+// CLI appends them to the root command; compiled-out integrations contribute
+// nothing.
+func CLICommands() []CLICommandRef {
+	mu.RLock()
+	defer mu.RUnlock()
+
+	names := make([]string, 0, len(definitions))
+	for name := range definitions {
+		names = append(names, name)
+	}
+	sort.Strings(names)
+
+	out := make([]CLICommandRef, 0)
+	for _, name := range names {
+		def := definitions[name]
+		for _, cmd := range def.CLICommands {
+			if cmd.Command == nil {
+				continue
+			}
+			out = append(out, CLICommandRef{IntegrationName: name, Command: cmd})
+		}
+	}
+	return out
+}
+
 func Get(name string) (Definition, bool) {
 	mu.RLock()
 	defer mu.RUnlock()

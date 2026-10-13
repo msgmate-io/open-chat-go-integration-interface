@@ -4,7 +4,10 @@ go 1.25.10
 
 require gorm.io/gorm v1.25.12
 
-require github.com/msgmate-io/go-tool-interface v0.0.0
+require (
+	github.com/msgmate-io/go-tool-interface v0.0.0
+	github.com/urfave/cli/v3 v3.11.0
+)
 
 replace github.com/msgmate-io/go-tool-interface => ../go_tool_interface
 

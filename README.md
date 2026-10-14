@@ -109,3 +109,24 @@ Notes:
 - Tool names are global across all integrations; duplicate tool names fail registration.
 - Integration bot bootstrap configs reuse the same schema as `open-chat.json`/`open-chat.yaml bootstrap.bots`.
 - Integration bot configs are intended as defaults; user-provided bot bootstrap config should take precedence.
+
+## Host capability interface
+
+Integrations should reach core capabilities through the stable, versioned `Host`
+interface instead of importing `backend/...` packages directly. The core installs
+an adapter at startup (`backend/integrationhost`); integrations read it via
+`integrationinterface.RequireHost()` at request/bootstrap time:
+
+```go
+host := integrationinterface.RequireHost()
+values := host.Config().All()          // resolved runtime config
+storage, user, err := host.HTTP().DBAndUser(r)
+orm := storage.Handle().(*gorm.DB)     // gorm is a third-party dependency
+host.Logger().Infof("handled %s", user.Username())
+```
+
+The surface is versioned via `integrationinterface.HostVersion` and does not
+expose `fs.FS`, `http.ServeMux` or `gorm.DB`. See the repository docs
+(`frontend/pages/docs/content/integration-host-migration.mdx`) for the migration
+recipe.
+

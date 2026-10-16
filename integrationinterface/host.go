@@ -14,7 +14,9 @@ import (
 //   - 1: initial Host/Config/Logger/Storage/User/HTTP surface.
 //   - 2: HTTP gains DB, the request-scoped storage handle without requiring an
 //     authenticated user (public/anonymous endpoints).
-const HostVersion = 2
+//   - 3: Storage gains the process-wide handle (Global); Chat, Workspace, Web,
+//     Tokens and Tools capability surfaces were added.
+const HostVersion = 3
 
 // Value is a single resolved runtime configuration entry.
 type Value struct {
@@ -50,6 +52,10 @@ type Storage interface {
 	// owned by the core adapter and documented there; callers type-assert before
 	// use.
 	Handle() interface{}
+	// Global returns the process-wide persistence handle, for code that runs
+	// outside an HTTP request (queue tasks, background workers, integration
+	// hooks). It is the stable counterpart of the core's global DB accessor.
+	Global() interface{}
 }
 
 // User is the authenticated principal attached to a request. It intentionally
@@ -88,6 +94,18 @@ type Host interface {
 	Config() Config
 	Logger() Logger
 	HTTP() HTTP
+	// Storage returns the process-wide persistence handle.
+	Storage() Storage
+	// Chat exposes the external chat backend lifecycle for runtime queries.
+	Chat() Chat
+	// Workspace exposes the shared workspace-lease registry.
+	Workspace() Workspace
+	// Web exposes the core's shared agent-facing web helpers.
+	Web() Web
+	// Tokens exposes access-token minting.
+	Tokens() Tokens
+	// Tools exposes the core tool-loop helpers (MCP discovery, tool init).
+	Tools() Tools
 }
 
 var (

@@ -9,7 +9,12 @@ import (
 // whenever the shape of Host (or one of its sub-interfaces) changes; the core
 // adapter reports the version it implements via Host.Version so integrations
 // can gate behaviour on it.
-const HostVersion = 1
+//
+// Version history:
+//   - 1: initial Host/Config/Logger/Storage/User/HTTP surface.
+//   - 2: HTTP gains DB, the request-scoped storage handle without requiring an
+//     authenticated user (public/anonymous endpoints).
+const HostVersion = 2
 
 // Value is a single resolved runtime configuration entry.
 type Value struct {
@@ -61,6 +66,10 @@ type User interface {
 // http.ServeMux: route registration stays on Definition, so this surface only
 // covers capability lookups.
 type HTTP interface {
+	// DB returns the request-scoped storage handle without requiring an
+	// authenticated user. It is the stable counterpart of the core's GetDB
+	// helper for public/anonymous endpoints.
+	DB(r *http.Request) (Storage, error)
 	// DBAndUser returns the request-scoped storage handle and the authenticated
 	// user. It is the stable counterpart of the core's GetDBAndUser helper.
 	DBAndUser(r *http.Request) (Storage, User, error)

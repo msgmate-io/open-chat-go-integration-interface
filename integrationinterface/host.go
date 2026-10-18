@@ -16,7 +16,10 @@ import (
 //     authenticated user (public/anonymous endpoints).
 //   - 3: Storage gains the process-wide handle (Global); Chat, Workspace, Web,
 //     Tokens and Tools capability surfaces were added.
-const HostVersion = 3
+//   - 4: the platform services the chat-backend integrations need were added:
+//     ConfigWriter (runtime-config writes) and Users (local account
+//     creation/resolution).
+const HostVersion = 4
 
 // Value is a single resolved runtime configuration entry.
 type Value struct {
@@ -106,6 +109,10 @@ type Host interface {
 	Tokens() Tokens
 	// Tools exposes the core tool-loop helpers (MCP discovery, tool init).
 	Tools() Tools
+	// ConfigWrite exposes the write side of the runtime configuration.
+	ConfigWrite() ConfigWriter
+	// Users exposes local-account creation/resolution.
+	Users() UsersService
 }
 
 var (

@@ -1,43 +1,68 @@
-# CI-failure relay contract (ci#607)
+# Integration event contract
 
-The base integration interface owns the *contract* for relaying an external CI
-failure into Open-Chat; it never owns dispatch or routing. The CI side only
-emits a payload, the core fans it out, and the receiving integration (agent
-chooser / development lead) resolves what to do with it.
+The base integration interface owns the *contract* for relaying an external
+event into Open-Chat; it never owns dispatch or routing. The emitting side
+publishes a small envelope, the core validates it and fans it out by `kind`, and
+the integration that registered a handler for that `kind` interprets the opaque
+payload.
 
-## Event
+The envelope is deliberately integration-neutral: it carries no CI, GitHub, PR,
+branch, commit or development-lead vocabulary. Whatever a `kind` means is owned
+end to end by the emitting side and the consuming integration.
 
-`integrationinterface.CIFailureEvent` (JSON, `schema_version: 1`):
+## Envelope
+
+`integrationinterface.IntegrationEvent` (JSON):
 
 | field | required | meaning |
 | --- | --- | --- |
-| `schema_version` | no | relay schema version, max `CIFailureSchemaVersion` |
-| `kind` | no | `ci_failure` (alias `ci_error`) |
-| `provider` | no | CI provider id, e.g. `github` |
-| `repo` | **yes** | `owner/name` or any GitHub URL/git form |
-| `pr_number` | no | pull request the failure was attributed to |
-| `branch`, `sha` | no | fallback targets when there is no PR |
-| `run_url` | no | link to the failing run |
-| `failing_jobs` | no | job names |
-| `failure_logs` | no | small (kilobyte) failed-step excerpt, secret-free |
-| `attempt`, `severity`, `occurred_at` | no | relay bookkeeping |
+| `schema_version` | no | envelope version, max `IntegrationEventSchemaVersion` (`1`); defaults to `1` |
+| `kind` | **yes** | lower-cased event kind, namespaced by the owning integration, e.g. `myintegration.notice` |
+| `provider` | no | free-form origin id, e.g. `github`, usable for routing/metrics |
+| `payload` | no | opaque, kind-specific JSON document owned by producer + consuming integration |
 
-The payload carries **no secrets**: emitters must send a truncated log excerpt
-and never environment dumps, tokens or credentials.
+Emitters must keep `payload` small and secret-free: never send environment
+dumps, tokens, kubeconfigs or raw credentials; send a truncated excerpt instead.
 
-## Sink
+## Validation and fan-out
 
-An integration implements `Definition.CIFailureEventSink` (`CIFailureEventFunc`)
-and is discovered via `CIFailureEventSinks()`. `DispatchCIFailureEvent` validates
-the event, fan-outs to every registered sink and joins their errors; with no sink
-compiled in it is a no-op, so the extension is backwards compatible.
+- `ParseIntegrationEvent(raw)` decodes an envelope and validates it. A missing
+  `kind` or a `schema_version` below `1` or above `IntegrationEventSchemaVersion`
+  is rejected with a descriptive error; unknown *kinds* are not, because the core
+  never interprets them.
+- `DispatchIntegrationEvent(ctx, event)` hands a validated event to every
+  registered handler and joins their errors into one (so one failing consumer
+  cannot silently swallow another's failure). With no handler registered it is a
+  no-op, so the extension is backwards compatible by construction.
 
-Sinks must be concurrency-safe and must not block the emitting CI run: hand the
-work to a queue and return.
+## Handlers
 
-## Identity
+An integration implements `integrationinterface.EventHandler`
+(`func(ctx, event) error`) and registers it under its own integration name and
+`kind` via `RegisterIntegrationEventHandler(...)`. Registrations are discovered
+through `IntegrationEventHandlers()`, which mirrors the `Definitions()` lookup
+pattern and is consulted per dispatch.
 
-`TargetKind()` picks the most specific target (PR, else branch, else commit) and
-`FixSessionKey()` derives the dedupe / attempt-cap identity
-(`owner/name#pr-<n>` / `#branch-<name>` / `#sha-<sha>`). Repos are normalized so
-the emitter's URL form matches interaction `repo:` tags.
+Handlers must be concurrency-safe and must not block the emitting side: hand the
+work to a queue and return. A kind-specific schema is versioned with the
+envelope's `schema_version`; bump `IntegrationEventSchemaVersion` only for
+changes to the envelope itself.
+
+## Example
+
+```go
+func init() {
+	integrationinterface.RegisterIntegrationEventHandler("myintegration", "myintegration.notice",
+		func(ctx context.Context, event integrationinterface.IntegrationEvent) error {
+			// The payload schema belongs to this integration, not to the core.
+			return queue.Publish(ctx, event.Payload)
+		})
+}
+```
+
+## Core requirements
+
+The core only needs to (a) expose a trusted ingress the owning integration
+contributes, (b) call `ParseIntegrationEvent` on the raw body, and (c) call
+`DispatchIntegrationEvent`. It must not know any kind-specific field, and a build
+with no consumer integration compiled in still compiles and simply drops events.

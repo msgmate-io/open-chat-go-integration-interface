@@ -32,8 +32,16 @@ type IntegrationEvent struct {
 	Payload       json.RawMessage `json:"payload,omitempty"`
 }
 
-// NormalizedKind is the lower-cased, trimmed kind used for registration and
-// lookup.
+// SchemaVersionOr returns the effective envelope version, defaulting to 1 when
+// the emitter left it out.
+func (e IntegrationEvent) SchemaVersionOr() int {
+	if e.SchemaVersion == 0 {
+		return IntegrationEventSchemaVersion
+	}
+	return e.SchemaVersion
+}
+
+// NormalizedKind is the lower-cased, trimmed kind used for lookup.
 func (e IntegrationEvent) NormalizedKind() string {
 	return strings.ToLower(strings.TrimSpace(e.Kind))
 }
@@ -82,12 +90,8 @@ func DispatchIntegrationEvent(ctx context.Context, event IntegrationEvent) error
 		return err
 	}
 	var errs []error
-	kind := event.NormalizedKind()
 	for _, ref := range IntegrationEventHandlers() {
 		if ref.Sink == nil {
-			continue
-		}
-		if ref.Kind != "" && ref.Kind != kind {
 			continue
 		}
 		if err := ref.Sink(ctx, event); err != nil {

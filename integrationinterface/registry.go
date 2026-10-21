@@ -159,13 +159,13 @@ func Has(name string) bool {
 }
 
 // EventHandlerRef pairs an integration name with its registered
-// integration relay sink (ci#607).
+// generic integration event handler.
 type EventHandlerRef struct {
 	IntegrationName string
 	Sink            EventHandler
 }
 
-// IntegrationEventHandlers returns the integration relay sinks declared by registered
+// IntegrationEventHandlers returns the generic event handlers declared by registered
 // integrations, ordered by integration name. Compiled-out integrations
 // contribute nothing, so the relay always mirrors the integration profile of
 // the build.

@@ -157,4 +157,3 @@ func Has(name string) bool {
 	_, ok := Get(name)
 	return ok
 }
-

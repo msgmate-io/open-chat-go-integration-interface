@@ -158,18 +158,18 @@ func Has(name string) bool {
 	return ok
 }
 
-// CIFailureEventSinkRef pairs an integration name with its registered
-// CI-failure relay sink (ci#607).
-type CIFailureEventSinkRef struct {
+// EventHandlerRef pairs an integration name with its registered
+// integration relay sink (ci#607).
+type EventHandlerRef struct {
 	IntegrationName string
-	Sink            CIFailureEventFunc
+	Sink            EventHandler
 }
 
-// CIFailureEventSinks returns the CI-failure relay sinks declared by registered
+// IntegrationEventHandlers returns the integration relay sinks declared by registered
 // integrations, ordered by integration name. Compiled-out integrations
 // contribute nothing, so the relay always mirrors the integration profile of
 // the build.
-func CIFailureEventSinks() []CIFailureEventSinkRef {
+func IntegrationEventHandlers() []EventHandlerRef {
 	mu.RLock()
 	defer mu.RUnlock()
 
@@ -179,13 +179,13 @@ func CIFailureEventSinks() []CIFailureEventSinkRef {
 	}
 	sort.Strings(names)
 
-	out := make([]CIFailureEventSinkRef, 0, len(names))
+	out := make([]EventHandlerRef, 0, len(names))
 	for _, name := range names {
 		def := definitions[name]
-		if def.CIFailureEventSink == nil {
+		if def.EventHandler == nil {
 			continue
 		}
-		out = append(out, CIFailureEventSinkRef{IntegrationName: name, Sink: def.CIFailureEventSink})
+		out = append(out, EventHandlerRef{IntegrationName: name, Sink: def.EventHandler})
 	}
 	return out
 }

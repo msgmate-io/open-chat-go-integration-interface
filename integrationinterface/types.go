@@ -205,12 +205,11 @@ type Definition struct {
 	// own richer login-history and audit trails without the core hardcoding
 	// per-integration persistence.
 	AuthEventSink AuthEventFunc
-	// CIFailureEventSink, when set, receives CI-failure events relayed by an
-	// external CI system (ci#607). It is optional: integrations that do not
-	// implement the relay are unaffected and the core treats a relay with no
-	// registered sink as a no-op. Sinks must be concurrency-safe and must not
-	// block the emitting CI run.
-	CIFailureEventSink CIFailureEventFunc
+	// EventHandler, when set, receives the generic IntegrationEvent envelopes
+	// this integration consumes (see events.go). It is optional: a build without
+	// the emitting or the consuming integration still compiles and dispatch is a
+	// no-op. Handlers must be concurrency-safe and must not block the emitter.
+	EventHandler EventHandler
 	// CLICommands declares extra `open-chat` subcommands contributed by this
 	// integration. Compiled-out integrations contribute nothing, so CLI
 	// extensions always mirror the integration profile of the build.

@@ -32,13 +32,27 @@ var hostSurfaceBuckets = HostSurfaceBuckets{
 }
 
 // checkHostSurface returns an error describing every Host method the given
-// host does not implement. A nil host is a program error, not a valid check.
+// host does not implement, using the package bucket index. A nil host is a
+// program error, not a valid check.
+//
+// The Host parameter type itself enforces compile-time conformance: a value
+// can only be passed here when it implements the full Host method set. The
+// recorded check re-asserts every bucket entry so that an index entry whose
+// method is not backed by a real Host capability (index drift) is reported
+// instead of silently accepting an adapter.
 func checkHostSurface(h Host) error {
+	return checkHostSurfaceWith(h, hostSurfaceBuckets)
+}
+
+// checkHostSurfaceWith runs the surface check against an explicit bucket map,
+// so callers (mostly tests) can exercise the drift-detection path without
+// mutating the package index.
+func checkHostSurfaceWith(h Host, buckets HostSurfaceBuckets) error {
 	if h == nil {
 		return fmt.Errorf("host surface check: nil Host")
 	}
 	var missing []string
-	for _, methods := range hostSurfaceBuckets {
+	for _, methods := range buckets {
 		for _, method := range methods {
 			var ok bool
 			switch method {
@@ -67,6 +81,8 @@ func checkHostSurface(h Host) error {
 			case "Tools":
 				_, ok = h.(interface{ Tools() Tools })
 			default:
+				// A bucket entry with no backing assertion means the index
+				// drifted from the real Host surface; treat it as missing.
 				ok = false
 			}
 			if !ok {

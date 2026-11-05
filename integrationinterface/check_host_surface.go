@@ -28,6 +28,7 @@ var hostSurfaceBuckets = HostSurfaceBuckets{
 	"security":   {"Tokens"},
 	"web":        {"Web"},
 	"tools":      {"Tools"},
+	"agent":      {"Agent"},
 	"versioning": {"Version"},
 }
 
@@ -80,6 +81,8 @@ func checkHostSurfaceWith(h Host, buckets HostSurfaceBuckets) error {
 				_, ok = h.(interface{ Tokens() Tokens })
 			case "Tools":
 				_, ok = h.(interface{ Tools() Tools })
+			case "Agent":
+				_, ok = h.(interface{ Agent() Agent })
 			default:
 				// A bucket entry with no backing assertion means the index
 				// drifted from the real Host surface; treat it as missing.

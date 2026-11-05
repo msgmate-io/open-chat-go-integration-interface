@@ -31,6 +31,7 @@ func (testHostStub) Users() UsersService       { return nil }
 func (testHostStub) Web() Web                  { return nil }
 func (testHostStub) Tokens() Tokens            { return nil }
 func (testHostStub) Tools() Tools              { return nil }
+func (testHostStub) Agent() Agent              { return nil }
 
 func TestCheckHostSurfaceAcceptsConformingHost(t *testing.T) {
 	if err := checkHostSurface(testHostStub{}); err != nil {

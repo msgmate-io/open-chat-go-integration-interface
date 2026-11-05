@@ -19,7 +19,12 @@ import (
 //   - 4: the platform services the chat-backend integrations need were added:
 //     ConfigWriter (runtime-config writes) and Users (local account
 //     creation/resolution).
-const HostVersion = 4
+//   - 5: Agent exposes the core's generic tool loop so an integration (the
+//     coding integrations) can drive a full agent turn without importing the
+//     core: it supplies the system prompt, tool set, tool-init and turn hooks,
+//     and the core runs the same provider streaming, persistence, confirmation
+//     and compaction path it uses for every native bot.
+const HostVersion = 5
 
 // Value is a single resolved runtime configuration entry.
 type Value struct {
@@ -113,6 +118,12 @@ type Host interface {
 	ConfigWrite() ConfigWriter
 	// Users exposes local-account creation/resolution.
 	Users() UsersService
+	// Agent exposes the core's generic tool loop, so an integration-owned agent
+	// (the coding integrations) can run a full turn with its own prompt, tools
+	// and turn hooks while the core keeps ownership of provider streaming,
+	// persistence, streaming frames, confirmations, compaction and the
+	// generation registry.
+	Agent() Agent
 }
 
 var (

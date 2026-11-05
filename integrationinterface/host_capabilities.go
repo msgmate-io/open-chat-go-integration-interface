@@ -271,3 +271,85 @@ type Tools interface {
 	// tool, or nil when none is stored.
 	GetToolInitData(db *gorm.DB, chatID uint, toolName string) (map[string]interface{}, error)
 }
+
+// ---------------------------------------------------------------------------
+// Agent runtime (HostVersion 5)
+// ---------------------------------------------------------------------------
+
+// AgentRequest is the stable request an integration hands the core to run the
+// generic tool loop for an integration-owned agent turn. The integration owns
+// the coder specifics (system prompt, tool set, tool-init and hooks); the core
+// owns provider selection/streaming, message persistence and websocket frames,
+// the confirmation/parked-action flow, context budgeting/compaction and the
+// generation registry, exactly as it does for a native bot.
+//
+// An empty SystemPrompt / Tools / ToolInit means "resolve from Config", so a
+// caller that only wants the default behaviour can leave them unset.
+type AgentRequest struct {
+	// ChatUUID is the chat the turn belongs to.
+	ChatUUID string
+	// APIHost is the Open-Chat API base URL the agent may call back into.
+	APIHost string
+	// BotUser is the identity the agent replies as.
+	BotUser BotUser
+	// Message is the incoming message the turn is answering.
+	Message ChatMessage
+	// Messages publishes live partial-message frames for the turn.
+	Messages MessageWriter
+	// Config is the agent's effective shared config.
+	Config map[string]interface{}
+	// SystemPrompt overrides the system prompt resolved from Config.
+	SystemPrompt string
+	// Tools overrides the tool-name set resolved from Config.
+	Tools []string
+	// ToolInit seeds per-tool init (tool_init) for the turn.
+	ToolInit map[string]map[string]interface{}
+	// Hooks are the integration's turn hooks (all optional).
+	Hooks AgentHooks
+}
+
+// AgentInitContext is the read-only input to the PreCallInit hook: the tool set,
+// the tool-init already pinned on the chat, the chat tags and the shared config.
+type AgentInitContext struct {
+	Tools  []string
+	Init   map[string]map[string]interface{}
+	Tags   []string
+	Config map[string]interface{}
+}
+
+// AgentHooks are the integration-owned turn hooks the core invokes while running
+// the generic loop. Every field is optional; a nil hook is a no-op and the core
+// keeps its default behaviour.
+type AgentHooks struct {
+	// PreCallInit returns tool-init payloads to seed before the first provider
+	// request (eg coder_select_workspace from the chat's repo/branch tags).
+	PreCallInit func(ctx AgentInitContext) map[string]map[string]interface{}
+	// NormalizeToolCall rewrites a raw tool-call argument JSON string before it
+	// is parsed and dispatched (eg coder_bash cd-prefix stripping). Returning ""
+	// keeps the original arguments.
+	NormalizeToolCall func(name, arguments string) string
+	// ToolFailureGuidance returns the failed tool result with extra guidance
+	// appended (eg sandbox readiness hints). Returning "" keeps the original.
+	ToolFailureGuidance func(name, result string) string
+	// ToolBudgetExempt reports whether a tool call is exempt from the per-turn
+	// tool-call budget (eg coder_schedule).
+	ToolBudgetExempt func(name string) bool
+	// ToolSchemaExtend mutates a tool's JSON schema before it is sent to the
+	// provider (eg adding the optional `reason` argument to coder tools).
+	ToolSchemaExtend func(name string, schema map[string]interface{})
+}
+
+// AgentResult is the outcome of one agent turn.
+type AgentResult struct {
+	MessageUUID string
+	Text        string
+	Finished    bool
+}
+
+// Agent runs the core's generic tool loop for an integration-owned agent turn.
+type Agent interface {
+	// Run executes a full turn and returns its result. The core persists the
+	// reply and fans out the streaming frames, so the integration only supplies
+	// the request.
+	Run(ctx context.Context, req AgentRequest) (AgentResult, error)
+}

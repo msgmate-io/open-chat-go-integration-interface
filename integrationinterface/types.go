@@ -215,4 +215,23 @@ type Definition struct {
 	// integration. Compiled-out integrations contribute nothing, so CLI
 	// extensions always mirror the integration profile of the build.
 	CLICommands []CLICommand
+
+	// AgentConfig reports whether a shared config declares an agent owned by
+	// this integration (eg a native coder agent). When set, the core consults it
+	// instead of any built-in agent detection.
+	AgentConfig func(config map[string]interface{}) bool
+	// AgentDefaults merges the integration's bot-level defaults into a bot's
+	// shared config (the config a bot's default shared config is built from).
+	AgentDefaults func(config map[string]interface{}) map[string]interface{}
+	// AgentInteractionDefaults merges the integration's interaction-time
+	// defaults into an interaction's effective shared config at create/dispatch
+	// time. tools/tags are the interaction's resolved tool names and tags;
+	// toolInit/overrides are the caller's tool-init and config overrides.
+	AgentInteractionDefaults func(config map[string]interface{}, tools, tags []string, toolInit, overrides map[string]interface{}) map[string]interface{}
+	// AgentChatSetup applies the integration's chat-create-time defaults (eg the
+	// coder dev set-up) to a chat's resolved shared config.
+	AgentChatSetup func(config map[string]interface{}, tags []string, toolInit map[string]interface{}) map[string]interface{}
+	// AgentInteractionTags returns the tags an integration's interaction should
+	// carry on top of the caller's explicit ones.
+	AgentInteractionTags func(config map[string]interface{}, botName string, explicit []string) []string
 }
